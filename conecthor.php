@@ -20,6 +20,13 @@ class conecthor {
         mysqli_set_charset($this->mysql, self::$collation);
     }
 
+    /**
+     * Funcion que formatea los errores que se producen respecto a MySQL o de la 
+     * libreria en si.
+     * @param array $dataError Un array con los datos explicitos que ha producido 
+     * el error mas algunos datos del controlador. Estos ultimos se muestran si
+     * self::$env es igual a "debug".
+     */
     private function error(array $dataError) {
         $hora = Date('d-m-Y H:i:s');
         switch (self::$env) {
@@ -31,7 +38,7 @@ class conecthor {
             case 'debug':
                 echo PHP_EOL;
                 echo '[' . $hora . '] ' . $dataError["mensaje"] . PHP_EOL;
-                echo $dataError["errno"] . '>' . $dataError["error"];
+                echo $dataError["errno"] . ' > ' . $dataError["error"];
                 echo PHP_EOL;
                 break;
 
@@ -43,20 +50,29 @@ class conecthor {
         }
     }
 
+    /**
+     * Funcion que cierra la conexion a MySQL
+     * @return 
+     */
     function CERRAR() {
         return mysqli_close($this->mysql);
     }
 
+    /**
+     * Funcion para intentar sanitizar los ingresos/inputs a la base de datos.
+     * De preferencia es preferible que se aplique en el ingreso mismo de datos 
+     * que a que se aplique en la operacion interna, ya que la operacion interna
+     * trata de implodar los datos array.
+     * @param String $str Cadena String a Sanitizar
+     * @return String Cadena sanitizada 
+     */
     function escaparSTR($str) {
         return mysqli_real_escape_string($this->mysql, $str);
     }
 
     private function ResultToArray($r) {
         $arrayDevuelto = array();
-        $arr_keys = array();
-        $arr_values = array();
         if (is_object($r)) {
-            //$arrayDevuelto = $r->fetch_assoc();
             $i = 0;
             while ($row = $r->fetch_assoc()) {
                 foreach ($row as $key => $value) {
@@ -75,7 +91,6 @@ class conecthor {
     }
 
     /**
-     * SELECTN
      * Funcion query de SELECT para N registros 
      * @param array $query El Query estructurado array en formato del tipo:<br/>
      * <pre>$query = array(
@@ -91,16 +106,12 @@ class conecthor {
     function SELECTN(array $query) {
         $arrayFinal = array();
         if (is_array($query)) {
-            $campos = mysqli_real_escape_string($this->mysql, implode(' , ', $query["campos"]));
-
+            $campos = implode(' , ', $query["campos"]);
             if (array_key_exists("where", $query)) {
-                $wheres = mysqli_real_escape_string($this->mysql, implode(' AND ', $query["where"]));
-                $sentencia = 'SELECT ' . $campos . ' FROM ' .
-                        mysqli_real_escape_string($this->mysql, $query["tabla"]) .
-                        ' WHERE ' . $wheres;
+                $wheres = implode(' AND ', $query["where"]);
+                $sentencia = 'SELECT ' . $campos . ' FROM ' . $query["tabla"] . ' WHERE ' . $wheres;
             } else {
-                $sentencia = 'SELECT ' . $campos . ' FROM ' .
-                        mysqli_real_escape_string($this->mysql, $query["tabla"]);
+                $sentencia = 'SELECT ' . $campos . ' FROM ' . $query["tabla"];
             }
 
             $result = mysqli_query($this->mysql, $sentencia);
@@ -124,4 +135,61 @@ class conecthor {
         }
         return $arrayFinal;
     }
+
+    /**
+     * Funcion que inserta una fila de datos en una determinada tabla. No es util 
+     * para operaciones en lote.
+     * @param array $data Array que representa los datos a ingresar, debe tener 
+     * este formato:
+     * <pre>$insert = array(
+     *   "tabla" => "tabla",
+     *   "data" => array(
+     *       "col1" => "val1",
+     *       "col2" => "val2"
+     *    )
+     * );</pre>
+     * @return boolean retorna TRUE en caso la consulta se haya realizado correctamente 
+     * y FALSE (ademas de un error de libreria derivado del error MySQL) en caso 
+     * de que la consulta no haya ingresado la fila de datos correctamente.
+     */
+    function INSERT1(array $data) {
+        $retorno = false;
+        if (is_array($data)) {
+            $arrK = array();
+            $arrV = array();
+
+            foreach ($data["data"] as $key => $value) {
+                $arrK[] = $key;
+                if ($value == "null" or $value == "NULL") {
+                    $arrV[] = "NULL";
+                } else {
+                    $arrV[] = '\'' . $value . '\'';
+                }
+            }
+
+            $campos = implode(', ', $arrK);
+            $valores = implode(", ", $arrV);
+            $sentencia = 'INSERT INTO ' . $data["tabla"] . '(' . $campos . ') VALUES(' . $valores . ') ';
+            $r = mysqli_query($this->mysql, $sentencia);
+            if ($r === false) {
+                $dataError = array(
+                    "mensaje" => "Error ingresando datos",
+                    "errno" => $this->mysql->errno,
+                    "error" => $this->mysql->error
+                );
+                $this->error($dataError);
+            } else {
+                $retorno = true;
+            }
+        } else {
+            $dataError = array(
+                "mensaje" => "El formato ingresado para ingreso de datos no cumple los requisitos",
+                "errno" => "0",
+                "error" => "El formato ingresado para consulta en INSERT1 debe ser un array."
+            );
+            $this->error($dataError);
+        }
+        return $retorno;
+    }
+
 }
