@@ -206,17 +206,19 @@ class conecthor {
      */
     function UPDATE1(array $data) {
         $retorno = false;
+        $sets_A = array();
         if (is_array($data)) {
             $sets = "";
             foreach ($data["data"] as $key => $value) {
                 if ($value != "NULL") {
-                    $sets .= $key . '= \'' . $value . '\'';
+                    $sets_A[] = $key . '= \'' . $value . '\'';
                 } else {
                     //Evita el problema del NULL entrecomillado
-                    $sets .= $key . '=NULL';
+                    $sets_A[] = $key . '=NULL';
                 }
             }
             $wheres = implode(" AND ", $data["where"]);
+            $sets = implode(",", $sets_A[]);
             $sentencia = 'UPDATE ' . $data["tabla"] . ' SET ' . $sets . ' WHERE ' . $wheres;
             $r = mysqli_query($this->mysql, $sentencia);
             if ($r === true) {
