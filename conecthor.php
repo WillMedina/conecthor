@@ -218,7 +218,7 @@ class conecthor {
                 }
             }
             $wheres = implode(" AND ", $data["where"]);
-            $sets = implode(",", $sets_A[]);
+            $sets = implode(",", $sets_A);
             $sentencia = 'UPDATE ' . $data["tabla"] . ' SET ' . $sets . ' WHERE ' . $wheres;
             $r = mysqli_query($this->mysql, $sentencia);
             if ($r === true) {
