@@ -192,4 +192,55 @@ class conecthor {
         return $retorno;
     }
 
+    /**
+     * Funcion que sirve para actualizar datos existentes.
+     * @param array $data Arreglo con los datos a actualizar. Debe tener el formato 
+     * <pre>$data = array(
+     *     "tabla" => "tabla",
+     *     "data" => array(
+     *                  "col1" => "val1"
+     *               )
+     *      "where" => array("condicion")
+     * );</pre>
+     * @return boolean Devuelve TRUE si se ha actualizado correctamente
+     */
+    function UPDATE1(array $data) {
+        $retorno = false;
+        if (is_array($data)) {
+            $arrK = array();
+            $arrV = array();
+            $sets = "";
+            foreach ($data["data"] as $key => $value) {
+                if ($value != "NULL") {
+                    $sets .= $key . '= \'' . $value . '\'';
+                } else {
+                    //Evita el problema del NULL entrecomillado
+                    $sets .= $key . '=NULL';
+                }
+            }
+            $wheres = implode(" AND ", $data["where"]);
+            $sentencia = 'UPDATE ' . $data["tabla"] . ' SET ' . $sets . ' WHERE' . $wheres;
+            $r = mysqli_query($this->mysql, $sentencia);
+            if ($r === true) {
+                $retorno = true;
+            } else {
+                $dataError = array(
+                    "mensaje" => "UPDATE no se ha podido ejecutar",
+                    "errno" => $this->mysql->errno,
+                    "error" => $this->mysql->error
+                );
+                $this->error($dataError);
+                $retorno = false;
+            }
+        } else {
+            $dataError = array(
+                "mensaje" => "El formato ingresado para ingreso de datos no cumple los requisitos",
+                "errno" => "0",
+                "error" => "El formato ingresado para consulta en INSERT1 debe ser un array."
+            );
+            $this->error($dataError);
+        }
+        return $retorno;
+    }
+
 }
