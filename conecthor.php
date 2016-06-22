@@ -207,8 +207,6 @@ class conecthor {
     function UPDATE1(array $data) {
         $retorno = false;
         if (is_array($data)) {
-            $arrK = array();
-            $arrV = array();
             $sets = "";
             foreach ($data["data"] as $key => $value) {
                 if ($value != "NULL") {
