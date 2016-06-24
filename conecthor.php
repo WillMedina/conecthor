@@ -73,7 +73,6 @@ class conecthor {
     private function ResultToArray($r) {
         $arrayDevuelto = array();
         if (is_object($r)) {
-            $i = 0;
             while ($row = $r->fetch_assoc()) {
                 foreach ($row as $key => $value) {
                     $arrayDevuelto[$key][] = $value;
@@ -207,8 +206,7 @@ class conecthor {
     function UPDATE1(array $data) {
         $retorno = false;
         $sets_A = array();
-        if (is_array($data)) {
-            $sets = "";
+        if (is_array($data)) {            
             foreach ($data["data"] as $key => $value) {
                 if ($value != "NULL") {
                     $sets_A[] = $key . '= \'' . $value . '\'';
