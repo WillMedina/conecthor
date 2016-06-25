@@ -206,7 +206,7 @@ class conecthor {
     function UPDATE1(array $data) {
         $retorno = false;
         $sets_A = array();
-        if (is_array($data)) {            
+        if (is_array($data)) {
             foreach ($data["data"] as $key => $value) {
                 if ($value != "NULL") {
                     $sets_A[] = $key . '= \'' . $value . '\'';
@@ -241,4 +241,35 @@ class conecthor {
         return $retorno;
     }
 
+    /**
+     * Funcion que puede borrar registros de una Tabla.
+     * @param array $data Array con la tabla y los condicionales para borrar registros.
+     *  Deben tener la siguiente forma: 
+     *  <pre>$data = array(
+     *  "tabla" => "tabla",
+     *  "wheres" => array("condicion1", "condicion2")
+     * );</pre>
+     * @return boolean Devuelve TRUE en caso de borrado y FALSE en caso contrario 
+     * (ademas de un error si se esta en modo DEBUG)
+     */
+    function DELETE1(array $data) {
+        $retorno = false;
+        if (is_array($data)) {
+            $where = implode(" AND ", $data["wheres"]);
+            $sentencia = 'DELETE FROM ' . $data["tabla"] . ' WHERE ' . $where;
+            $r = mysqli_query($this->mysql, $sentencia);
+            if ($r === true) {
+                $retorno = true;
+            } else {
+                $dataError = array(
+                    "mensaje" => "DELETE no se ha podido ejecutar",
+                    "errno" => $this->mysql->errno,
+                    "error" => $this->mysql->error
+                );
+                $this->error($dataError);
+                $retorno = false;
+            }
+        }
+        return $retorno;
+    }
 }
